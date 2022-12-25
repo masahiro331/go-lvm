@@ -3,11 +3,12 @@ package go_lvm
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/alecthomas/participle/lexer"
+	"io"
+
 	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/masahiro331/go-lvm/types"
 	"golang.org/x/xerrors"
-	"io"
 )
 
 const SectorSize = 512
@@ -106,13 +107,14 @@ var (
 	)
 )
 
-func parseMetadata(r io.Reader) (types.Metadata, error) {
+func parseMetadata(r io.Reader) (types.MainSection, error) {
 	expr, err := parser.Parse("", r)
 	if err != nil {
-		return types.Metadata{}, err
+		return types.MainSection{}, err
 	}
+	metadata := types.ParseMainSection(expr)
 
-	return *expr, nil
+	return metadata, nil
 }
 
 func parseDataAreaDescriptors(r io.Reader) ([]types.DataAreaDescriptor, error) {

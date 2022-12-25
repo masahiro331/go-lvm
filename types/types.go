@@ -29,7 +29,7 @@ type DataAreaDescriptor struct {
 
 type MetadataArea struct {
 	Header   MetadataAreaHeader
-	Metadata Metadata
+	Metadata MainSection
 }
 
 type MetadataAreaHeader struct {
