@@ -42,9 +42,11 @@ const (
 
 	// PeStart is the start extent of the physical volume,
 	// contains an offset relative to the start of the physical volume
+	// Sector Size ??
 	PeStart = "pe_start"
 
 	// PeCount is number of (allocated) extents in the physical volume
+	// ExtentSize ??
 	PeCount = "pe_count"
 
 	CreationHost = "creation_host"

@@ -7,8 +7,18 @@ type Volume struct {
 	MetadataArea []MetadataArea
 }
 
+type Signature [8]byte
+
+func (s Signature) Valid() bool {
+	return string(s[:]) == "LABELONE"
+}
+
+func (s Signature) String() string {
+	return string(s[:])
+}
+
 type PhysicalVolumeLabelHeader struct {
-	Signature     [8]byte
+	Signature     Signature
 	SectorNumber  int64
 	Checksum      int32
 	DataOffset    int32

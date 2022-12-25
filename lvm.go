@@ -2,7 +2,6 @@ package go_lvm
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 
 	"github.com/alecthomas/participle/v2"
@@ -13,11 +12,17 @@ import (
 
 const SectorSize = 512
 
-type Driver interface {
-	Next() (types.Volume, error)
+func Check(rs io.ReadSeeker) bool {
+	rs.Seek(SectorSize, io.SeekStart)
+	defer rs.Seek(0, io.SeekStart)
+
+	var s types.Signature
+	binary.Read(rs, binary.LittleEndian, &s)
+
+	return s.Valid()
 }
 
-func NewDriver(rs io.ReadSeeker) (Driver, error) {
+func Volume(rs io.ReadSeeker) (*types.Volume, error) {
 	rs.Seek(SectorSize, io.SeekStart)
 	vlh, err := NewPhysicalVolumeLabelHeader(rs)
 	if err != nil {
@@ -27,20 +32,19 @@ func NewDriver(rs io.ReadSeeker) (Driver, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create physical volume header: %w", err)
 	}
-	var v types.Volume
+	var v *types.Volume
 	v.LabelHeader = vlh
 	v.Header = vh
-	fmt.Printf("%+v\n", v)
 
 	for _, descriptor := range v.Header.MetaDataAreaDescriptor {
-		h, err := parseMetadataArea(rs, descriptor)
+		m, err := parseMetadataArea(rs, descriptor)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to parse metadata area header: %w", err)
 		}
-		fmt.Printf("%+v\n", h)
+		v.MetadataArea = append(v.MetadataArea, m)
 	}
 
-	return nil, nil
+	return v, nil
 }
 
 func NewPhysicalVolumeHeader(r io.Reader) (types.PhysicalVolumeHeader, error) {
@@ -82,7 +86,7 @@ func parseMetadataArea(r io.ReadSeeker, descriptor types.DataAreaDescriptor) (ty
 		}
 		offset := h.Header.MetadataAreaOffset + d.DataAreaOffset
 		r.Seek(offset, io.SeekStart)
-		h.Metadata, err = parseMetadata(io.LimitReader(r, d.DataAreaSize))
+		h.Metadata, err = parseMetadata(io.LimitReader(r, d.DataAreaSize-1))
 		if err != nil {
 			return types.MetadataArea{}, xerrors.Errorf("failed to parse metadata: %w", err)
 		}
