@@ -1,8 +1,8 @@
-package go_lvm
+package lvm
 
 import (
-	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/masahiro331/go-lvm/types"
@@ -35,15 +35,9 @@ func Test_parseMetadata(t *testing.T) {
 			got, err := parseMetadata(f)
 			require.NoError(t, err)
 
-			debug(got)
-
-			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("parseMetadata() got = %v, want %v", got, tt.want)
-			// }
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseMetadata() got = %v, want %v", got, tt.want)
+			}
 		})
 	}
-}
-
-func debug(m types.Metadata) {
-	fmt.Printf("%+v\n", m)
 }

@@ -1,4 +1,4 @@
-package go_lvm
+package lvm
 
 import (
 	"encoding/binary"
@@ -12,14 +12,21 @@ import (
 
 const SectorSize = 512
 
-func Check(rs io.ReadSeeker) bool {
-	rs.Seek(SectorSize, io.SeekStart)
-	defer rs.Seek(0, io.SeekStart)
-
-	var s types.Signature
-	binary.Read(rs, binary.LittleEndian, &s)
-
-	return s.Valid()
+func Check(rs io.ReadSeeker) (bool, error) {
+	_, err := rs.Seek(SectorSize, io.SeekStart)
+	if err != nil {
+		return false, xerrors.Errorf("failed to seek lvm header offset: %w", err)
+	}
+	buf := make([]byte, SectorSize)
+	n, err := rs.Read(buf)
+	if err != nil || n != SectorSize {
+		return false, xerrors.Errorf("failed to read lvm header: %w", err)
+	}
+	_, err = rs.Seek(0, io.SeekStart)
+	if err != nil {
+		return false, xerrors.Errorf("failed to seek initial offset: %w", err)
+	}
+	return string(buf[:8]) == "LABELONE", nil
 }
 
 func Volume(rs io.ReadSeeker) (*types.Volume, error) {
