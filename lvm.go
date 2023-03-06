@@ -39,7 +39,7 @@ func Volume(rs io.ReadSeeker) (*types.Volume, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create physical volume header: %w", err)
 	}
-	var v *types.Volume
+	var v types.Volume
 	v.LabelHeader = vlh
 	v.Header = vh
 
@@ -51,7 +51,7 @@ func Volume(rs io.ReadSeeker) (*types.Volume, error) {
 		v.MetadataArea = append(v.MetadataArea, m)
 	}
 
-	return v, nil
+	return &v, nil
 }
 
 func NewPhysicalVolumeHeader(r io.Reader) (types.PhysicalVolumeHeader, error) {
